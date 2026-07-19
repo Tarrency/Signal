@@ -2,12 +2,11 @@ import { useEffect, useMemo, useState } from 'react';
 import { createGame, dispatchTrain, getGame, getLeaderboard } from './api';
 import { POLL_INTERVAL_MS } from './constants';
 import GameScreen from './components/GameScreen';
-import LeaderboardScreen from './components/LeaderboardScreen';
 import ResultScreen from './components/ResultScreen';
 import StartScreen from './components/StartScreen';
 import type { GameView, LeaderboardEntry, TrainId } from './types';
 
-type Screen = 'start' | 'playing' | 'result' | 'leaderboard';
+type Screen = 'start' | 'playing' | 'result';
 
 export default function App() {
   const [screen, setScreen] = useState<Screen>('start');
@@ -90,27 +89,17 @@ export default function App() {
     }
   }
 
-  function handleViewLeaderboard() {
-    refreshLeaderboard();
-    setScreen('leaderboard');
-  }
-
-  function handleBackFromLeaderboard() {
-    setScreen(game?.status === 'finished' ? 'result' : 'start');
-  }
-
   return (
     <main className="app-shell">
       {screen === 'start' ? (
-        <StartScreen leaderboard={leaderboard} onStart={handleStart} onViewLeaderboard={handleViewLeaderboard} loading={loading} />
+        <StartScreen leaderboard={leaderboard} onStart={handleStart} loading={loading} />
       ) : null}
       {screen === 'playing' && game ? (
         <GameScreen game={game} dispatchingTrainId={dispatchingTrainId} onDispatch={handleDispatch} errorMessage={errorMessage} />
       ) : null}
       {screen === 'result' && result ? (
-        <ResultScreen result={result} onRestart={handleStart} onViewLeaderboard={handleViewLeaderboard} />
+        <ResultScreen result={result} leaderboard={leaderboard} onRestart={handleStart} />
       ) : null}
-      {screen === 'leaderboard' ? <LeaderboardScreen entries={leaderboard} onBack={handleBackFromLeaderboard} /> : null}
     </main>
   );
 }

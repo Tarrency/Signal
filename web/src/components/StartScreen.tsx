@@ -3,11 +3,10 @@ import type { LeaderboardEntry } from '../types';
 type StartScreenProps = {
   leaderboard: LeaderboardEntry[];
   onStart: () => void;
-  onViewLeaderboard: () => void;
   loading: boolean;
 };
 
-export default function StartScreen({ leaderboard, onStart, onViewLeaderboard, loading }: StartScreenProps) {
+export default function StartScreen({ leaderboard, onStart, loading }: StartScreenProps) {
   return (
     <section className="screen card start-screen">
       <div>
@@ -25,9 +24,6 @@ export default function StartScreen({ leaderboard, onStart, onViewLeaderboard, l
       <div className="start-actions">
         <button className="primary-button" onClick={onStart} disabled={loading}>
           {loading ? '正在建立调度台...' : '开始调度'}
-        </button>
-        <button className="secondary-button" onClick={onViewLeaderboard}>
-          查看最佳成绩榜
         </button>
       </div>
       <div className="hint-box">

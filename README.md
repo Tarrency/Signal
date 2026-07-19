@@ -33,6 +33,8 @@ signal/
       types.ts
       styles.css
       components/
+  test/
+    gameEngine.test.ts
   data/
     leaderboard.json
 ```
@@ -47,6 +49,17 @@ npm run dev
 启动后：
 - 前端：http://localhost:5173
 - 后端：http://localhost:3001
+
+## 测试
+
+核心规则引擎（`server/gameEngine.ts`）有 Vitest 单元测试，位于 `test/gameEngine.test.ts`。引擎是纯函数 + 时间参数注入（`now: Date`）设计，无随机数、不依赖真实时钟，因此测试完全确定性。
+
+```bash
+npm test        # 单次运行
+npm run test:watch  # 监听模式
+```
+
+覆盖信号时刻表边界、发车/红灯/占用/状态校验、到站与事故判定、60 秒结束、S/D 评级、视图裁剪与排行榜条目生成，共 19 个用例。
 
 ## 试玩说明
 
@@ -129,10 +142,11 @@ curl http://localhost:3001/api/leaderboard
 - 固定信号时序
 - 历史最佳成绩榜
 - 可视化地图、日志、信号面板、结果页
+- 核心规则引擎的自动化单元测试（Vitest，19 个用例）
 
 ## 未完成
 
-- 自动化测试
+- 更全面的自动化测试（路由层与前端组件）
 - WebSocket 实时同步
 - 更复杂的动画表现
 - 多地图 / 多关卡
