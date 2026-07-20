@@ -28,10 +28,17 @@ export async function getGame(gameId: string) {
   return request<{ game: GameView }>(`/games/${gameId}`);
 }
 
-export async function dispatchTrain(gameId: string, trainId: TrainId) {
-  return request<{ ok: true; game: GameView }>(`/games/${gameId}/dispatch`, {
+export async function sendReroute(gameId: string, trainId: TrainId, viaNodeId: string) {
+  return request<{ ok: true; game: GameView }>(`/games/${gameId}/reroute`, {
     method: 'POST',
-    body: JSON.stringify({ trainId }),
+    body: JSON.stringify({ trainId, viaNodeId }),
+  });
+}
+
+export async function sendPause(gameId: string) {
+  return request<{ ok: true; game: GameView }>(`/games/${gameId}/pause`, {
+    method: 'POST',
+    body: JSON.stringify({}),
   });
 }
 

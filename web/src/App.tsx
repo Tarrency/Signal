@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { createGame, dispatchTrain, getGame, getLeaderboard } from './api';
+import { createGame, getGame, getLeaderboard, sendPause, sendReroute } from './api';
 import { POLL_INTERVAL_MS } from './constants';
 import GameScreen from './components/GameScreen';
 import ResultScreen from './components/ResultScreen';
@@ -14,8 +14,8 @@ export default function App() {
   const [game, setGame] = useState<GameView | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [loading, setLoading] = useState(false);
-  const [dispatchingTrainId, setDispatchingTrainId] = useState<TrainId | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
 
   async function refreshLeaderboard() {
     try {
@@ -34,13 +34,14 @@ export default function App() {
     if (screen !== 'playing' || !gameId) {
       return;
     }
-
     const timer = window.setInterval(async () => {
       try {
         const response = await getGame(gameId);
         setGame(response.game);
+        // 暴雨到达后不再自动跳转结果页：保留列车在终点站的状态，
+        // 由玩家在顶部模块手动点击「查看结果」。仅停止轮询、预取排行榜。
         if (response.game.status === 'finished') {
-          setScreen('result');
+          window.clearInterval(timer);
           refreshLeaderboard();
         }
       } catch (error) {
@@ -50,6 +51,13 @@ export default function App() {
 
     return () => window.clearInterval(timer);
   }, [gameId, screen]);
+
+  // toast 自动消失
+  useEffect(() => {
+    if (!toast) return;
+    const t = window.setTimeout(() => setToast(null), 1600);
+    return () => window.clearTimeout(t);
+  }, [toast]);
 
   const result = useMemo(() => game?.result ?? null, [game]);
 
@@ -68,37 +76,71 @@ export default function App() {
     }
   }
 
-  async function handleDispatch(trainId: TrainId) {
-    if (!gameId) {
-      return;
-    }
-
-    setDispatchingTrainId(trainId);
+  async function handleReroute(trainId: TrainId, viaNodeId: string, isCurrent: boolean) {
+    if (!gameId) return;
     setErrorMessage(null);
     try {
-      const response = await dispatchTrain(gameId, trainId);
+      const response = await sendReroute(gameId, trainId, viaNodeId);
       setGame(response.game);
+      // 若点的就是列车当前方向，则没有真正变道，提示保持原路线。
+      setToast(isCurrent ? `${trainId} 保持原路线` : `${trainId} 已变更车道`);
       if (response.game.status === 'finished') {
-        setScreen('result');
         refreshLeaderboard();
       }
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : '调度失败');
-    } finally {
-      setDispatchingTrainId(null);
+      setErrorMessage(error instanceof Error ? error.message : '变道失败');
     }
+  }
+
+  async function handlePause() {
+    if (!gameId) return;
+    setErrorMessage(null);
+    try {
+      const response = await sendPause(gameId);
+      setGame(response.game);
+      if (response.game.status === 'finished') {
+        refreshLeaderboard();
+      }
+    } catch (error) {
+      setErrorMessage(error instanceof Error ? error.message : '暂停失败');
+    }
+  }
+
+  function handleViewResult() {
+    setScreen('result');
+    refreshLeaderboard();
+  }
+
+  function handleHome() {
+    setScreen('start');
+    setGameId(null);
+    setGame(null);
+    setErrorMessage(null);
+    setToast(null);
   }
 
   return (
     <main className="app-shell">
       {screen === 'start' ? (
-        <StartScreen leaderboard={leaderboard} onStart={handleStart} loading={loading} />
+        <StartScreen onStart={handleStart} loading={loading} />
       ) : null}
       {screen === 'playing' && game ? (
-        <GameScreen game={game} dispatchingTrainId={dispatchingTrainId} onDispatch={handleDispatch} errorMessage={errorMessage} />
+        <GameScreen
+          game={game}
+          onReroute={handleReroute}
+          onPause={handlePause}
+          onViewResult={handleViewResult}
+          errorMessage={errorMessage}
+          toast={toast}
+        />
       ) : null}
       {screen === 'result' && result ? (
-        <ResultScreen result={result} leaderboard={leaderboard} onRestart={handleStart} />
+        <ResultScreen
+          result={result}
+          leaderboard={leaderboard}
+          onRestart={handleStart}
+          onHome={handleHome}
+        />
       ) : null}
     </main>
   );

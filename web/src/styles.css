@@ -71,11 +71,33 @@ h1 {
   line-height: 1.6;
 }
 
+.lede + .lede {
+  margin-top: 12px;
+}
+
+.rules-title {
+  margin: 22px 0 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #8eb7ff;
+}
+
 .rules-list {
-  margin: 20px 0 0;
+  margin: 10px 0 0;
   padding-left: 20px;
   color: #d6e4ff;
   line-height: 1.8;
+}
+
+.rating-rules {
+  list-style: none;
+  padding-left: 0;
+}
+.rating-rules li { margin-bottom: 2px; }
+.rating-rules strong {
+  display: inline-block;
+  min-width: 1.6em;
+  color: #ffd34d;
 }
 
 .start-actions {
@@ -353,11 +375,38 @@ button:disabled {
   line-height: 1.6;
 }
 
+/* 结果页：section 内两张卡片，各自带内边距 + 间距 */
+.result-screen {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.result-hero,
+.result-leaderboard {
+  padding: 28px 32px;
+}
+
+/* 结果页顶部模块：评级与操作按钮并排 */
+.result-rating-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+.result-rating-row h1 { margin: 0; }
+.result-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
 .result-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 14px;
-  margin: 24px 0 30px;
+  margin: 24px 0 0;
 }
 
 .result-grid div {
@@ -374,15 +423,24 @@ button:disabled {
 }
 
 .result-leaderboard {
-  margin-bottom: 30px;
-  padding-top: 24px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: 20px;
 }
 
 .leaderboard-table {
-  margin-top: 20px;
-  display: grid;
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
   gap: 10px;
+}
+
+/* 定高可滚动：表头固定，条目区滚动 */
+.leaderboard-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 6px;
 }
 
 .leaderboard-row {
@@ -456,3 +514,531 @@ button:disabled {
     flex-direction: column;
   }
 }
+
+/* ===== 暴雨调度：SVG 地图 ===== */
+.map-canvas-wrap {
+  position: relative;
+  margin-top: 12px;
+  border-radius: 16px;
+  background: radial-gradient(circle at 50% 40%, rgba(40, 60, 90, 0.55), rgba(14, 20, 32, 0.9));
+  padding: 8px;
+}
+
+.map-canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+.map-edge {
+  stroke: #38414d;
+  stroke-width: 4;
+  stroke-dasharray: 10 8;
+  stroke-linecap: round;
+  transition: stroke 0.3s ease, stroke-width 0.3s ease;
+}
+
+.map-edge.active {
+  stroke-width: 6;
+  stroke-dasharray: 12 6;
+  animation: dash-flow 0.8s linear infinite;
+}
+
+.map-edge.selected-route {
+  stroke: #cfe3ff;
+  stroke-opacity: 0.6;
+}
+
+.map-edge.damaged {
+  stroke: #ff4d4f;
+  stroke-width: 6;
+  stroke-dasharray: 6 5;
+  animation: danger-pulse 1s ease-in-out infinite;
+}
+
+@keyframes dash-flow {
+  to { stroke-dashoffset: -20; }
+}
+
+@keyframes danger-pulse {
+  0%, 100% { stroke-opacity: 0.55; }
+  50% { stroke-opacity: 1; }
+}
+
+.map-node circle {
+  fill: #1c2636;
+  stroke: #5c7699;
+  stroke-width: 2;
+}
+
+.map-node.kind-depot circle {
+  fill: #223046;
+  stroke: #7fa8d8;
+}
+
+.map-node.kind-terminal circle {
+  fill: #1f3a2c;
+  stroke: #4bbf7b;
+}
+
+.map-node text {
+  fill: #cfe0f5;
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.map-train {
+  transition: transform 0.5s linear;
+}
+
+.map-train.status-arrived,
+.map-train.status-incident {
+  transition: transform 0.3s ease;
+}
+
+.map-train .train-label {
+  fill: #0d1420;
+  font-size: 12px;
+  font-weight: 800;
+  pointer-events: none;
+}
+
+.map-train .train-badge {
+  fill: #ffd34d;
+  font-size: 18px;
+  font-weight: 800;
+  pointer-events: none;
+}
+
+.map-train.selected .train-label {
+  fill: #0d1420;
+}
+
+.map-legend {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 9;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 14px;
+  max-width: 60%;
+  font-size: 12px;
+  color: #9dbcf1;
+  background: rgba(14, 20, 32, 0.6);
+  padding: 10px 12px;
+  border-radius: 12px;
+  backdrop-filter: blur(2px);
+  pointer-events: none;
+}
+
+.legend-dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+/* ===== 暴雨预警面板 ===== */
+.storm-count {
+  margin: 16px 0 8px;
+  padding: 14px;
+  border-radius: 16px;
+  font-size: 22px;
+  font-weight: 700;
+  text-align: center;
+  background: rgba(90, 120, 200, 0.18);
+  color: #bcd3ff;
+}
+
+.damaged-list {
+  margin-top: 14px;
+}
+
+.damaged-list h3 {
+  font-size: 14px;
+  color: #ffb1b1;
+}
+
+.damaged-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 8px 0 0;
+  display: grid;
+  gap: 6px;
+}
+
+.damaged-item {
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255, 77, 79, 0.16);
+  color: #ffc4c4;
+  font-size: 13px;
+}
+
+.muted { color: #7f92ad; }
+
+/* ===== 列车调度行 ===== */
+/* 最后 10 秒：倒计时圆环强烈红色告警（缩放脉动 + 红光晕 + 边框闪烁） */
+.timer-ring.danger {
+  border-color: #ff4d4f;
+  color: #ff5b5d;
+  animation: timer-alarm 0.6s ease-in-out infinite;
+}
+
+@keyframes timer-alarm {
+  0%,
+  100% {
+    transform: scale(1);
+    border-color: rgba(255, 77, 79, 0.55);
+    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);
+    color: #ff8b8b;
+  }
+  50% {
+    transform: scale(1.12);
+    border-color: #ff4d4f;
+    box-shadow: 0 0 26px 6px rgba(255, 77, 79, 0.55);
+    color: #ff3b3d;
+  }
+}
+
+/* 危险时整块 hero 也透出红色警示边 */
+.compact-hero.danger-hero {
+  border-color: rgba(255, 77, 79, 0.5);
+  animation: hero-alarm 0.9s ease-in-out infinite;
+}
+
+@keyframes hero-alarm {
+  0%,
+  100% { box-shadow: 0 18px 60px rgba(0, 0, 0, 0.28); }
+  50% { box-shadow: 0 0 34px 2px rgba(255, 77, 79, 0.28); }
+}
+
+.train-row {
+  flex-direction: column;
+  cursor: pointer;
+  border: 2px solid transparent;
+  transition: border-color 0.2s ease, background 0.2s ease;
+}
+
+.train-row.selected {
+  border-color: #7fb0ff;
+  background: rgba(127, 176, 255, 0.12);
+}
+
+.train-row-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.train-chip {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+  font-weight: 800;
+  color: #0d1420;
+}
+
+.train-status-tag {
+  font-size: 13px;
+  margin: 2px 0 0;
+}
+
+.train-status-tag.status-incident { color: #ff8b8b; }
+.train-status-tag.status-arrived { color: #7ce0a3; }
+.train-status-tag.status-holding,
+.train-status-tag.status-paused { color: #ffd88b; }
+.train-status-tag.status-running { color: #9dd9ff; }
+
+.train-pos, .train-target {
+  font-size: 13px;
+  color: #aebfd6;
+  margin: 6px 0 0;
+}
+
+.train-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.ghost-button {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.06);
+  color: #dce8fb;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.ghost-button:hover:not(:disabled) {
+  background: rgba(127, 176, 255, 0.2);
+}
+
+.ghost-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* ===== 变道地图 v2：曲线路段 + 路线底图 + 方向箭头 ===== */
+.game-screen.minimal {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.compact-hero {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ===== 结束态：内容框暴雨下雨特效 ===== */
+.rain-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+}
+.rain-overlay .raindrop {
+  position: absolute;
+  top: -20%;
+  width: 2px;
+  height: 60px;
+  background: linear-gradient(to bottom, rgba(150, 200, 255, 0), rgba(150, 200, 255, 0.55));
+  animation: rainfall linear infinite;
+}
+@keyframes rainfall {
+  0% { transform: translateY(-120%); opacity: 0; }
+  10% { opacity: 1; }
+  100% { transform: translateY(260%); opacity: 0.9; }
+}
+/* hero 内容浮于雨幕之上 */
+.compact-hero .hero-main,
+.compact-hero .hero-result-button,
+.compact-hero .timer-ring {
+  position: relative;
+  z-index: 1;
+}
+
+.full-map {
+  padding: 12px;
+}
+
+.full-map .map-canvas-wrap {
+  margin-top: 0;
+}
+
+/* 曲线路段基础样式（覆盖旧 line 版） */
+path.map-edge {
+  fill: none;
+  stroke: #3a4452;
+  stroke-width: 3;
+  stroke-dasharray: 9 7;
+  stroke-linecap: round;
+  transition: stroke 0.3s ease, stroke-width 0.3s ease;
+}
+
+path.map-edge.active {
+  stroke-width: 5;
+  animation: dash-flow 0.8s linear infinite;
+}
+
+path.map-edge.damaged {
+  stroke: #ff4d4f;
+  stroke-width: 5;
+  stroke-dasharray: 5 4;
+  animation: danger-pulse 1s ease-in-out infinite;
+}
+
+/* 各列车规划路线：低透明度底图 */
+.route-underlay {
+  fill: none;
+  stroke-width: 9;
+  stroke-linecap: round;
+  stroke-opacity: 0.16;
+}
+
+/* hover 预览路线：高亮 */
+.route-preview {
+  fill: none;
+  stroke-width: 5;
+  stroke-linecap: round;
+  stroke-opacity: 0.85;
+  stroke-dasharray: 2 6;
+  animation: dash-flow 0.6s linear infinite;
+  pointer-events: none;
+}
+
+/* 变道方向箭头 */
+.reroute-arrow { cursor: pointer; }
+.reroute-arrow .arrow-hit {
+  stroke: transparent;
+  stroke-width: 22;
+}
+.reroute-arrow .arrow-shaft {
+  stroke: var(--arrow-color);
+  stroke-width: 3;
+  stroke-linecap: round;
+}
+.reroute-arrow .arrow-head {
+  fill: var(--arrow-color);
+}
+/* 未临近：暗淡 */
+.reroute-arrow.dim { opacity: 0.28; }
+/* 临近亮起 */
+.reroute-arrow.lit { opacity: 1; }
+.reroute-arrow.lit .arrow-shaft,
+.reroute-arrow.lit .arrow-head {
+  filter: drop-shadow(0 0 5px var(--arrow-color));
+}
+.reroute-arrow.lit .arrow-shaft { animation: arrow-glow 0.9s ease-in-out infinite; }
+/* 当前方向略淡（示意维持） */
+.reroute-arrow.current .arrow-shaft { stroke-dasharray: 4 3; }
+/* 损坏方向：红色不可选 */
+.reroute-arrow.damaged { cursor: not-allowed; }
+.reroute-arrow.damaged .arrow-shaft,
+.reroute-arrow.damaged .arrow-head {
+  stroke: #ff4d4f;
+  fill: #ff4d4f;
+  filter: none;
+}
+.reroute-arrow.damaged:hover { opacity: 0.4; }
+
+@keyframes arrow-glow {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; }
+}
+
+.map-train { transition: transform 0.5s linear; }
+.map-train.status-arrived, .map-train.status-incident { transition: transform 0.3s ease; }
+
+.legend-hint {
+  color: #7f92ad;
+  font-style: italic;
+}
+
+/* ===== 变道 toast ===== */
+.map-card { position: relative; }
+.reroute-toast {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 10;
+  padding: 10px 18px;
+  border-radius: 999px;
+  background: rgba(55, 178, 77, 0.92);
+  color: #06210f;
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  animation: toast-in 0.2s ease-out;
+  pointer-events: none;
+}
+
+@keyframes toast-in {
+  from { opacity: 0; transform: translate(-50%, -8px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* ===== 到站/结束 底部模块 ===== */
+.completion-panel {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 20px 24px;
+  border: 1px solid rgba(55, 178, 77, 0.4);
+  background: rgba(55, 178, 77, 0.08);
+}
+
+.completion-info h2 { margin: 0 0 8px; }
+
+.completion-hint { color: #aebfd6; margin: 8px 0 0; font-size: 14px; }
+
+.completion-panel .primary-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* ===== 全体暂停按钮（地图内） ===== */
+.map-pause-button {
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  z-index: 11;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 211, 77, 0.5);
+  background: rgba(255, 211, 77, 0.14);
+  color: #ffe08a;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.15s ease, opacity 0.15s ease;
+}
+.map-pause-button:hover:not(:disabled) { background: rgba(255, 211, 77, 0.26); }
+.map-pause-button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ===== 停滞横幅（暂停 / 检修） ===== */
+.stall-banner {
+  position: absolute;
+  top: 72px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 11;
+  padding: 10px 20px;
+  border-radius: 999px;
+  font-weight: 700;
+  font-size: 15px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+  animation: toast-in 0.2s ease-out;
+}
+.stall-banner.pause { background: rgba(255, 211, 77, 0.92); color: #3a2c00; }
+.stall-banner.repair {
+  background: rgba(255, 77, 79, 0.92);
+  color: #2a0708;
+  animation: danger-pulse 1s ease-in-out infinite;
+}
+
+/* 停滞中的列车描边脉动 */
+.map-train.status-stalled circle { animation: danger-pulse 1s ease-in-out infinite; }
+
+/* 结束态倒计时的暂停图标 */
+.timer-ring.finished { border-color: rgba(255, 211, 77, 0.5); color: #ffe08a; }
+.finish-pause-icon { color: #ffe08a; }
+
+/* ===== 结束态：结果并入倒计时模块 ===== */
+.finished-hero {
+  border: 1px solid rgba(55, 178, 77, 0.45);
+  background: linear-gradient(120deg, rgba(55, 178, 77, 0.12), rgba(255, 255, 255, 0.04));
+}
+.hero-main { display: flex; flex-direction: column; gap: 6px; }
+.hero-result-button {
+  white-space: nowrap;
+  font-size: 16px;
+  padding: 14px 22px;
+}
+
+/* 结果页评级解说 */
+.result-flavor {
+  margin: 6px 0 4px;
+  color: #cfe0f5;
+  font-size: 15px;
+  line-height: 1.6;
+}
+.result-flavor strong { color: #8eb7ff; }

@@ -1,20 +1,58 @@
 export type TrainId = 'T1' | 'T2' | 'T3';
-export type RouteId = 'blue' | 'orange';
-export type TrainStatus = 'waiting' | 'in_transit' | 'arrived' | 'incident';
-export type StationId = 'west_park' | 'south_bridge' | 'central' | 'east_harbor' | 'north_dock';
-export type SignalState = 'green' | 'red';
+export type GameStatus = 'playing' | 'finished';
+export type TrainStatus = 'running' | 'stalled' | 'arrived' | 'stranded';
+export type StallKind = 'pause' | 'repair';
 export type Rating = 'S' | 'A' | 'B' | 'C' | 'D';
+export type NodeKind = 'depot' | 'terminal' | 'junction';
+
+export type MapNode = {
+  id: string;
+  label: string;
+  kind: NodeKind;
+  x: number;
+  y: number;
+};
+
+export type MapEdge = {
+  id: string;
+  from: string;
+  to: string;
+  seconds: number;
+  curve: number;
+};
+
+export type MapGraph = {
+  nodes: MapNode[];
+  edges: MapEdge[];
+};
+
+export type TrainPosition =
+  | { kind: 'node'; nodeId: string }
+  | { kind: 'edge'; edgeId: string; from: string; to: string; progress: number };
+
+export type DecisionOption = {
+  viaNodeId: string;
+  edgeId: string;
+  damaged: boolean;
+  isCurrent: boolean;
+  resultingRoute: string[];
+};
+
+export type TrainDecision = {
+  junctionNodeId: string;
+  lit: boolean;
+  options: DecisionOption[];
+};
 
 export type TrainView = {
   id: TrainId;
-  route: RouteId;
   status: TrainStatus;
-  currentStationId: StationId | null;
-  nextStationId: StationId | null;
-  canDispatch: boolean;
-  blockedReason: string | null;
-  travelSeconds: number | null;
-  secondsToArrival: number | null;
+  route: string[];
+  position: TrainPosition;
+  nextNodeId: string | null;
+  targetNodeId: string;
+  secondsToNextNode: number | null;
+  decision: TrainDecision | null;
 };
 
 export type GameResult = {
@@ -22,28 +60,30 @@ export type GameResult = {
   incidentCount: number;
   unfinishedCount: number;
   completionTimeSeconds: number | null;
+  pauseCount: number;
   rating: Rating;
 };
 
 export type GameLog = {
   id: string;
   timestamp: string;
-  type: 'dispatch' | 'arrival' | 'signal_change' | 'incident' | 'finish' | 'system';
+  type: 'system' | 'move' | 'arrival' | 'incident' | 'lightning' | 'action' | 'finish';
   message: string;
 };
 
 export type GameView = {
   id: string;
   playerName: string;
-  status: 'playing' | 'finished';
+  status: GameStatus;
   elapsedSeconds: number;
   remainingSeconds: number;
-  signal: {
-    stationId: 'central';
-    state: SignalState;
-    secondsUntilSwitch: number;
-  };
+  stall: { kind: StallKind; secondsLeft: number; reason?: string } | null;
+  pauseCount: number;
+  accidentCount: number;
+  graph: MapGraph;
   trains: TrainView[];
+  damagedEdgeIds: string[];
+  activeEdges: { edgeId: string; trainIds: TrainId[] }[];
   summary: {
     arrivedCount: number;
     incidentCount: number;
